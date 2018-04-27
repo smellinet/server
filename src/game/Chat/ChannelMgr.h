@@ -26,7 +26,7 @@
 #include "Channel.h"
 #include "Policies/Singleton.h"
 #include "ObjectGuid.h"
-#include "AbstractPlayer.h"
+#include "MapNodes/AbstractPlayer.h"
 
 #include <map>
 #include <string>

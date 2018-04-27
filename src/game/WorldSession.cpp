@@ -41,6 +41,10 @@
 #include "MapManager.h"
 #include "SocialMgr.h"
 
+#ifdef ENABLE_PLAYERBOTS
+#include "playerbot.h"
+#endif
+
 #include "PlayerBotMgr.h"
 #include "Anticheat.h"
 #include "Language.h"
@@ -145,6 +149,16 @@ void WorldSession::SendPacket(WorldPacket const* packet)
         sLog.outInfo("[NETWORK] Packet %s size %u is too large. Not sent [Account %u Player %s]", LookupOpcodeName(packet->GetOpcode()), packet->size(), GetAccountId(), GetPlayerName());
         return;
     }
+
+#ifdef ENABLE_PLAYERBOTS
+	if (GetPlayer()) {
+		if (GetPlayer()->GetPlayerbotAI())
+			GetPlayer()->GetPlayerbotAI()->HandleBotOutgoingPacket(*packet);
+		else if (GetPlayer()->GetPlayerbotMgr())
+			GetPlayer()->GetPlayerbotMgr()->HandleMasterOutgoingPacket(*packet);
+	}
+#endif
+
     if (!m_Socket && !m_masterSession)
     {
         if (packet->GetOpcode() == SMSG_MESSAGECHAT)
@@ -507,6 +521,10 @@ void WorldSession::ProcessPackets(PacketFilter& updater)
                         ExecuteOpcode(opHandle, packet);
 
                     // lag can cause STATUS_LOGGEDIN opcodes to arrive after the player started a transfer
+#ifdef ENABLE_PLAYERBOTS
+					if (_player && _player->GetPlayerbotMgr())
+						_player->GetPlayerbotMgr()->HandleMasterIncomingPacket(*packet);
+#endif
                     break;
                 case STATUS_LOGGEDIN_OR_RECENTLY_LOGGEDOUT:
                     if (!_player && !m_playerRecentlyLogout)
@@ -598,7 +616,28 @@ void WorldSession::ProcessPackets(PacketFilter& updater)
 
         delete packet;
     }
+
+#ifdef ENABLE_PLAYERBOTS
+	if (GetPlayer() && GetPlayer()->GetPlayerbotMgr())
+		GetPlayer()->GetPlayerbotMgr()->UpdateSessions(0);
+#endif
+
+
 }
+
+#ifdef ENABLE_PLAYERBOTS
+void WorldSession::HandleBotPackets()
+{
+	WorldPacket* packet;
+	for (int i = 0; i < PACKET_PROCESS_MAX_TYPE; ++i){
+		while (_recvQueue[i].next(packet)) {
+			OpcodeHandler const& opHandle = opcodeTable[packet->GetOpcode()];
+			(this->*opHandle.handler)(*packet);
+			delete packet;
+		}
+	}
+}
+#endif
 
 
 void WorldSession::ClearIncomingPacketsByType(PacketProcessing type)
@@ -640,6 +679,10 @@ void WorldSession::LogoutPlayer(bool Save)
 
     if (_player)
     {
+#ifdef ENABLE_PLAYERBOTS
+		if (GetPlayer()->GetPlayerbotMgr())
+			GetPlayer()->GetPlayerbotMgr()->LogoutAllBots();
+#endif
         bool inWorld = _player->IsInWorld() && _player->FindMap();
 
         sLog.out(LOG_CHAR, "Account: %d (IP: %s) Logout Character:[%s] (guid: %u)", GetAccountId(), GetRemoteAddress().c_str(), _player->GetName() , _player->GetGUIDLow());
@@ -647,6 +690,11 @@ void WorldSession::LogoutPlayer(bool Save)
         if (ObjectGuid lootGuid = GetPlayer()->GetLootGuid())
             DoLootRelease(lootGuid);
 
+#ifdef ENABLE_PLAYERBOTS
+		if (_player->GetPlayerbotMgr())
+			_player->GetPlayerbotMgr()->LogoutAllBots();
+		sRandomPlayerbotMgr.OnPlayerLogout(_player);
+#endif
         ///- If the player just died before logging out, make him appear as a ghost
         if (inWorld && _player->GetDeathTimer())
         {
@@ -702,8 +750,17 @@ void WorldSession::LogoutPlayer(bool Save)
         // No SQL injection as AccountID is uint32
         static SqlStatementID id;
 
-        SqlStatement stmt = LoginDatabase.CreateStatement(id, "UPDATE account SET current_realm = ?, online = 0 WHERE id = ?");
-        stmt.PExecute(uint32(0), GetAccountId());
+#ifdef ENABLE_PLAYERBOTS
+		if (!GetPlayer()->GetPlayerbotAI())
+		{
+			SqlStatement stmt = LoginDatabase.CreateStatement(id, "UPDATE account SET current_realm = ?, online = 0 WHERE id = ?");
+			stmt.PExecute(uint32(0), GetAccountId());
+		}
+#else
+
+		SqlStatement stmt = LoginDatabase.CreateStatement(id, "UPDATE account SET current_realm = ?, online = 0 WHERE id = ?");
+		stmt.PExecute(uint32(0), GetAccountId());
+#endif
 
         ///- If the player is in a guild, update the guild roster and broadcast a logout message to other guild members
         if (Guild* guild = sGuildMgr.GetGuildById(_player->GetGuildId()))

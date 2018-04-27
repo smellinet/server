@@ -846,6 +846,11 @@ class MANGOS_DLL_SPEC ChatHandler
         bool HandleWaterwalkCommand(char* args);
         bool HandleQuitCommand(char* args);
 
+#ifdef ENABLE_PLAYERBOTS
+		bool HandlePlayerbotCommand(char* args);
+		bool HandlePlayerbotConsoleCommand(char* args);
+		bool HandleAhBotCommand(char* args);
+#endif
         //! Development Commands
         bool HandleSaveAllCommand(char* args);
         bool HandleDebugMoveCommand(char* args);

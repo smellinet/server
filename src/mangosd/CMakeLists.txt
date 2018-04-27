@@ -106,6 +106,7 @@ if(SCRIPTS)
     framework
     g3dlite
     gsoap
+    bots
     ${ACE_LIBRARIES}
   )
 else()
@@ -116,6 +117,7 @@ else()
     framework
     g3dlite
     gsoap
+    bots
     ${ACE_LIBRARIES}
   )
 endif()

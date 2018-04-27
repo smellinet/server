@@ -68,7 +68,11 @@
 #include "GMTicketMgr.h"
 #include "MasterPlayer.h"
 
-/* Nostalrius */
+#ifdef ENABLE_PLAYERBOTS
+#include "playerbot.h"
+#endif
+
+ /* Nostalrius */
 #include "Config/Config.h"
 #include <cmath>
 #include "ZoneScript.h"
@@ -407,6 +411,11 @@ Player::Player(WorldSession *session) : Unit(),
     m_enableInstanceSwitch(true), m_currentTicketCounter(0),
     m_honorMgr(this), m_bNextRelocationsIgnored(0)
 {
+#ifdef ENABLE_PLAYERBOTS
+	m_playerbotAI = 0;
+	m_playerbotMgr = 0;
+#endif
+
     m_objectType |= TYPEMASK_PLAYER;
     m_objectTypeId = TYPEID_PLAYER;
 
@@ -604,6 +613,17 @@ Player::~Player()
 
     for (size_t x = 0; x < ItemSetEff.size(); x++)
          delete ItemSetEff[x];
+
+#ifdef ENABLE_PLAYERBOTS
+	if (m_playerbotAI) {
+		delete m_playerbotAI;
+		m_playerbotAI = 0;
+	}
+	if (m_playerbotMgr) {
+		delete m_playerbotMgr;
+		m_playerbotMgr = 0;
+	}
+#endif
 
     // clean up player-instance binds, may unload some instance saves
     for (BoundInstancesMap::iterator itr = m_boundInstances.begin(); itr != m_boundInstances.end(); ++itr)
@@ -1332,7 +1352,15 @@ void Player::Update(uint32 update_diff, uint32 p_time)
 
     if (IsHasDelayedTeleport())
         TeleportTo(m_teleport_dest, m_teleport_options, m_teleportRecoverDelayed);
-    // Movement interpolation & cheat computation - only if not already kicked!
+
+#ifdef ENABLE_PLAYERBOTS
+	if (m_playerbotAI)
+		m_playerbotAI->UpdateAI(p_time);
+	if (m_playerbotMgr)
+		m_playerbotMgr->UpdateAI(p_time);
+#endif
+
+	// Movement interpolation & cheat computation - only if not already kicked!
     if (!GetSession()->IsConnected())
         return;
 

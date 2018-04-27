@@ -1096,6 +1096,11 @@ ChatCommand * ChatHandler::getCommandTable()
         { MSTR, "log",            SEC_GAMEMASTER,     true,  &ChatHandler::HandleViewLogCommand,             "", nullptr },
         { MSTR, "spamer",         SEC_GAMEMASTER,     true, nullptr,                                           "", spamerCommandTable },
         { MSTR, "gold",           SEC_GAMEMASTER,     true, nullptr,                                           "", goldCommandTable },
+#ifdef ENABLE_PLAYERBOTS
+		{ NODE, "bot",            SEC_PLAYER,         false, &ChatHandler::HandlePlayerbotCommand,           "", nullptr },
+		{ NODE, "rndbot",         SEC_CONSOLE,        true,  &ChatHandler::HandlePlayerbotConsoleCommand,    "", nullptr },
+		{ NODE, "ahbot",          SEC_GAMEMASTER,     true,  &ChatHandler::HandleAhBotCommand,               "", nullptr },
+#endif
         { MSTR, nullptr,       0,                  false, nullptr,                                           "", nullptr }
     };
 

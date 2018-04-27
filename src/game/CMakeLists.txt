@@ -554,6 +554,16 @@ target_link_libraries(game
   detour
 )
 
+
+
+if(PLAYERBOTS)
+    include_directories(
+        ${CMAKE_SOURCE_DIR}/src/modules/bots/playerbot
+        ${CMAKE_SOURCE_DIR}/src/modules/bots/ahbot
+    )
+    target_link_libraries(game  bots)
+endif()
+
 #add_dependencies(game revision.h)
 
 # Generate precompiled header

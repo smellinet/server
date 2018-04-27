@@ -898,6 +898,11 @@ class MANGOS_DLL_SPEC WorldSession
         void HandleCancelTempEnchantmentOpcode(WorldPacket& recv_data);
 
         void HandleSetTaxiBenchmarkOpcode(WorldPacket& recv_data);
+
+#ifdef ENABLE_PLAYERBOTS
+		void HandleBotPackets();
+#endif
+
     private:
         // private trade methods
         void moveItems(Item* myItems[], Item* hisItems[]);

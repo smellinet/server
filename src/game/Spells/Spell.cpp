@@ -3980,6 +3980,7 @@ void Spell::finish(bool ok)
         m_caster->AttackStop();
         m_caster->InterruptSpell(CURRENT_AUTOREPEAT_SPELL);
     }
+
 }
 
 void Spell::SendCastResult(SpellCastResult result)

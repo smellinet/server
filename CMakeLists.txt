@@ -63,6 +63,8 @@ message(STATUS
     PREFIX: Path where the server should be installed to
     PCH: Use precompiled headers
     DEBUG: Debug mode
+  Modules:
+    PLAYERBOTS              Enable Player Bots
   To set an option simply type -D<OPTION>=<VALUE> after 'cmake <srcs>'.
   For example: cmake .. -DDEBUG=1 -DPREFIX=/opt/mangos\n"
 ) # TODO: PLATFORM: Sets the architecture for compile (X86,X64)
@@ -91,6 +93,7 @@ option(USE_ANTICHEAT "Use anticheat" 0)
 option(SCRIPTS "Compile scripts" 1)
 option(USE_EXTRACTORS "Compile extractors" 0)
 option(USE_UTILITY "Compile additional utility's" 0)
+option(PLAYERBOTS "Use Bots engines - Player & AH" 0)
 
 find_package(PCHSupport)
 
@@ -307,6 +310,13 @@ if(SCRIPTS)
   message(STATUS "Build scripts    : Yes (default)")
 else()
   message(STATUS "Build scripts    : No")
+endif()
+
+if(PLAYERBOTS)
+    message(STATUS "Enable Player Bots    : Yes (default)")
+    set(DEFINITIONS ${DEFINITIONS} ENABLE_PLAYERBOTS)
+else()
+    message(STATUS "Enable Player Bots    : No")
 endif()
 
 if(UNIX)

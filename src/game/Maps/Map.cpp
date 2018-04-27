@@ -1034,7 +1034,9 @@ void Map::Remove(Player *player, bool remove)
     for (ObjectGuidSet::const_iterator it = player->m_visibleGUIDs.begin(); it != player->m_visibleGUIDs.end(); ++it)
         if (Player* other = GetPlayer(*it))
             other->m_broadcaster->RemoveListener(player);
-
+#ifdef ENABLE_PLAYERBOTS
+	if (!player->GetPlayerbotAI())
+#endif
     player->ResetMap();
     if (remove)
         DeleteFromWorld(player);
